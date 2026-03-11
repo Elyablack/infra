@@ -1,0 +1,2 @@
+[vps]
+ubuntu ansible_host=100.126.22.101 ansible_user=admin1 ansible_ssh_private_key_file=/Users/elvira/.ssh/elvira_ed25519 ansible_python_interpreter=/usr/bin/python3.12
