@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== backup start $(date) ===" >> /Users/elvira/infra/backups/backup.log
+BACKUP_DIR="/Users/elvira/infra/backups"
+LOG="$BACKUP_DIR/backup.log"
+ERR="$BACKUP_DIR/backup.err.log"
+
+echo "=== backup start $(date -u '+%Y-%m-%d %H:%M:%S UTC') ===" >> "$LOG"
 
 cd /Users/elvira/infra
 
-/opt/homebrew/bin/ansible-playbook playbooks/backup_vps.yml >> /Users/elvira/infra/backups/backup.log 2>> /Users/elvira/infra/backups/backup.err.log
-/usr/bin/rsync -avz vps:/srv/backups/ /Users/elvira/infra/backups/ >> /Users/elvira/infra/backups/backup.log 2>> /Users/elvira/infra/backups/backup.err.log
+/opt/homebrew/bin/ansible-playbook playbooks/backup_vps.yml >> "$LOG" 2>> "$ERR"
+/usr/bin/rsync -avz vps:/srv/backups/ "$BACKUP_DIR/" >> "$LOG" 2>> "$ERR"
+/Users/elvira/infra/scripts/offsite_backup.sh >> "$LOG" 2>> "$ERR"
 
-echo "=== backup end $(date) ===" >> /Users/elvira/infra/backups/backup.log
+echo "=== backup end $(date -u '+%Y-%m-%d %H:%M:%S UTC') ===" >> "$LOG"
