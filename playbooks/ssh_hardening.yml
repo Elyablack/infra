@@ -1,0 +1,61 @@
+- name: SSH hardening
+  hosts: ssh_hosts
+  become: true
+  serial: 1
+
+  vars:
+    ssh_hardening_file: /etc/ssh/sshd_config.d/99-hardening.conf
+
+  tasks:
+    - name: Ensure ssh drop-in directory exists
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Install SSH hardening config
+      ansible.builtin.copy:
+        dest: "{{ ssh_hardening_file }}"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          PermitRootLogin no
+          PasswordAuthentication no
+          PubkeyAuthentication yes
+          KbdInteractiveAuthentication no
+          ChallengeResponseAuthentication no
+          PermitEmptyPasswords no
+          X11Forwarding no
+          MaxAuthTries 3
+      notify: Validate and reload ssh
+
+    - name: Check effective sshd settings
+      ansible.builtin.command: sshd -T
+      register: sshd_effective
+      changed_when: false
+      check_mode: false
+
+    - name: Show effective SSH settings
+      ansible.builtin.debug:
+        msg:
+          - "{{ sshd_effective.stdout_lines | select('search', '^permitrootlogin ') | list }}"
+          - "{{ sshd_effective.stdout_lines | select('search', '^passwordauthentication ') | list }}"
+          - "{{ sshd_effective.stdout_lines | select('search', '^pubkeyauthentication ') | list }}"
+          - "{{ sshd_effective.stdout_lines | select('search', '^kbdinteractiveauthentication ') | list }}"
+          - "{{ sshd_effective.stdout_lines | select('search', '^x11forwarding ') | list }}"
+          - "{{ sshd_effective.stdout_lines | select('search', '^maxauthtries ') | list }}"
+
+  handlers:
+    - name: Validate sshd config
+      ansible.builtin.command: sshd -t
+      changed_when: false
+      listen: Validate and reload ssh
+
+    - name: Reload ssh service
+      ansible.builtin.service:
+        name: ssh
+        state: reloaded
+      listen: Validate and reload ssh
