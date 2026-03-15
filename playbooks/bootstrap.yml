@@ -1,0 +1,4 @@
+- import_playbook: common_baseline.yml
+- import_playbook: ssh_hardening.yml
+- import_playbook: node_exporter_textfile.yml
+- import_playbook: docker_baseline.yml
