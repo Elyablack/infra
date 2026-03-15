@@ -1,0 +1,57 @@
+- name: Configure Docker baseline
+  hosts: ssh_hosts
+  become: true
+  serial: 1
+
+  tasks:
+    - name: Check whether docker is already installed
+      ansible.builtin.command: docker --version
+      register: docker_installed
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Install Docker packages if Docker is missing
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+        update_cache: true
+      when: docker_installed.rc != 0
+
+    - name: Ensure docker group exists
+      ansible.builtin.group:
+        name: docker
+        state: present
+
+    - name: Get docker group info
+      ansible.builtin.getent:
+        database: group
+        key: docker
+      check_mode: false
+
+    - name: Ensure admin1 is in docker group
+      ansible.builtin.user:
+        name: admin1
+        groups: docker
+        append: true
+      when: "'docker' in ansible_facts.getent_group"
+
+    - name: Ensure Docker service is enabled
+      ansible.builtin.service:
+        name: docker
+        enabled: true
+        state: started
+      when: docker_installed.rc != 0
+
+    - name: Check Docker version
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Show Docker version
+      ansible.builtin.debug:
+        msg: "{{ docker_version.stdout | default('docker not installed yet') }}"
