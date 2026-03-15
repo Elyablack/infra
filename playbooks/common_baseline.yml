@@ -1,0 +1,63 @@
+- name: Configure common baseline
+  hosts: ssh_hosts
+  become: true
+  serial: 1
+
+  vars:
+    common_packages:
+      - curl
+      - wget
+      - vim
+      - git
+      - jq
+      - rsync
+      - htop
+      - unzip
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - fail2ban
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install common packages
+      ansible.builtin.apt:
+        name: "{{ common_packages }}"
+        state: present
+
+    - name: Set timezone to UTC
+      community.general.timezone:
+        name: UTC
+
+    - name: Ensure fail2ban is enabled and running
+      ansible.builtin.service:
+        name: fail2ban
+        enabled: true
+        state: started
+
+    - name: Ensure admin1 sudoers file exists
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/90-admin1
+        content: |
+          admin1 ALL=(ALL) NOPASSWD:ALL
+        owner: root
+        group: root
+        mode: "0440"
+        validate: /usr/sbin/visudo -cf %s
+
+    - name: Check effective timezone
+      ansible.builtin.command: timedatectl show --property=Timezone --value
+      register: timezone_result
+      changed_when: false
+
+    - name: Show baseline summary
+      ansible.builtin.debug:
+        msg:
+          - "Timezone: {{ timezone_result.stdout }}"
+          - "Baseline packages installed"
+          - "fail2ban enabled"
+          - "passwordless sudo ensured for admin1"

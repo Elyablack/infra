@@ -1,0 +1,49 @@
+- name: Configure node exporter textfile collector
+  hosts: vps_servers
+  become: true
+
+  vars:
+    node_exporter_textfile_dir: /var/lib/node_exporter/textfile_collector
+    node_exporter_env_file: /etc/default/prometheus-node-exporter
+    node_exporter_args: '--collector.textfile.directory=/var/lib/node_exporter/textfile_collector'
+
+  tasks:
+    - name: Ensure textfile collector directory exists
+      ansible.builtin.file:
+        path: "{{ node_exporter_textfile_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Ensure node exporter ARGS line is present
+      ansible.builtin.lineinfile:
+        path: "{{ node_exporter_env_file }}"
+        regexp: '^ARGS='
+        line: 'ARGS="{{ node_exporter_args }}"'
+        create: true
+        backup: true
+      notify: Restart node exporter
+
+    - name: Ensure node exporter service is enabled
+      ansible.builtin.service:
+        name: prometheus-node-exporter
+        enabled: true
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
+    - name: Check node exporter service status
+      ansible.builtin.command: systemctl is-active prometheus-node-exporter
+      register: node_exporter_status
+      changed_when: false
+
+    - name: Show node exporter status
+      ansible.builtin.debug:
+        msg: "prometheus-node-exporter is {{ node_exporter_status.stdout }}"
+
+  handlers:
+    - name: Restart node exporter
+      ansible.builtin.service:
+        name: prometheus-node-exporter
+        state: restarted
