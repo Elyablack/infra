@@ -1,0 +1,6 @@
+region              = "fra1"
+droplet_name        = "monitoring-vps"
+droplet_size        = "s-1vcpu-1gb"
+droplet_image       = "ubuntu-24-04-x64"
+ssh_public_key_path = "~/.ssh/vps_ed25519.pub"
+ssh_key_name        = "elvira-vps-key"
