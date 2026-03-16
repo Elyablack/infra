@@ -1,5 +1,14 @@
 # Infrastructure Automation
 
+![Ansible](https://img.shields.io/badge/-Ansible-464646?style=flat&logo=ansible&logoColor=56C0C0&color=008080)
+![Linux](https://img.shields.io/badge/-Linux-464646?style=flat&logo=linux&logoColor=56C0C0&color=008080)
+![Docker](https://img.shields.io/badge/-Docker-464646?style=flat&logo=docker&logoColor=56C0C0&color=008080)
+![Bash](https://img.shields.io/badge/-Bash-464646?style=flat&logo=gnubash&logoColor=56C0C0&color=008080)
+![SSH](https://img.shields.io/badge/-SSH-464646?style=flat&logo=gnubash&logoColor=56C0C0&color=008080)
+![rsync](https://img.shields.io/badge/-rsync-464646?style=flat&logo=linux&logoColor=56C0C0&color=008080)
+![DigitalOcean](https://img.shields.io/badge/-DigitalOcean-464646?style=flat&logo=digitalocean&logoColor=56C0C0&color=008080)
+![Prometheus](https://img.shields.io/badge/-Prometheus-464646?style=flat&logo=prometheus&logoColor=56C0C0&color=008080)
+
 Infrastructure management and backup automation for the monitoring stack.
 
 This repository contains **Ansible playbooks, automation scripts, and operational documentation** used to manage and protect the VPS environment.
