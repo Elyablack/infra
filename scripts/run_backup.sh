@@ -4,13 +4,23 @@ set -euo pipefail
 BACKUP_DIR="/Users/elvira/infra/backups"
 LOG="$BACKUP_DIR/backup.log"
 ERR="$BACKUP_DIR/backup.err.log"
+STATE_DIR="/Users/elvira/infra/.state"
+STAMP_FILE="$STATE_DIR/last_backup_date"
+
+mkdir -p "$STATE_DIR"
+
+TODAY="$(date +%F)"
+
+if [[ -f "$STAMP_FILE" ]] && [[ "$(cat "$STAMP_FILE")" == "$TODAY" ]]; then
+  echo "Backup already completed today ($TODAY), skipping." >> "$LOG"
+  exit 0
+fi
 
 echo "=== backup start $(date -u '+%Y-%m-%d %H:%M:%S UTC') ===" >> "$LOG"
 
 cd /Users/elvira/infra
 
 /opt/homebrew/bin/ansible-playbook playbooks/backup_vps.yml >> "$LOG" 2>> "$ERR"
-
 /usr/bin/rsync -avz vps:/srv/backups/ "$BACKUP_DIR/" >> "$LOG" 2>> "$ERR"
 
 LATEST=$(ls -t "$BACKUP_DIR"/vps-backup-*.tar.gz | head -n1)
@@ -31,4 +41,5 @@ echo "backup_last_success_unixtime $TS" | sudo tee /var/lib/node_exporter/textfi
 echo "backup_last_success 1" | sudo tee -a /var/lib/node_exporter/textfile_collector/backup.prom >/dev/null
 ' >> "$LOG" 2>> "$ERR"
 
+echo "$TODAY" > "$STAMP_FILE"
 echo "=== backup end $(date -u '+%Y-%m-%d %H:%M:%S UTC') ===" >> "$LOG"
